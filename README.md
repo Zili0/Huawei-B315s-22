@@ -1,11 +1,10 @@
 # Huawei-B315s-22
 PHP and C/C++ API for Huawei-B315s-22 modem/router. 
 ### About
-I have this modem installed in a **_unattended_** site. It use a SIM for internet connection. 
-
-A Raspberry server, various cameras and some sensors are connected to the LAN.
-In this situation it is very important for me to be able to control the server via SMS.
-These APIs allow the Raspberry to access incoming SMS messages via the modem.
+I have this modem installed in a **_unattended_** site. It use a SIM for internet connection.<br> 
+A Raspberry server, various cameras and some sensors are connected to the LAN.<br>
+In this situation it is very important for me to be able to control the server via SMS.<br>
+These APIs allow the Raspberry to access incoming SMS messages via the modem.<br>
 Many other features are also available, such as:
 - sending a text message
 - reboot of the modem
