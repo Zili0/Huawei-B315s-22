@@ -51,7 +51,6 @@ static int  ContLen=0;
 static char SessionID[1024]={0};
 static char TokInfo  [2048]={0};
 
-
 #define BuffSize 10240
 
 static char Buff[BuffSize];
@@ -80,27 +79,27 @@ static  char *hex2bin( char *s)
     bin[l]=0;
     return bin;
 }
+
 /*------------------------------------------+
 |               Generic GET                 |
 +------------------------------------------*/
-static int GET(char *fun)
+static int GET(char *Url)
 {
     char URL[128];
-    sprintf (URL, MODEM "%s", fun);
+    sprintf (URL, MODEM "%s", Url);
     curl_easy_setopt(ch, CURLOPT_URL, URL);
     curl_easy_setopt(ch, CURLOPT_COOKIE, SessionID);
     curl_easy_setopt(ch, CURLOPT_POST, 0);
     chunk.size = 0;
-    headers=NULL;
     res = curl_easy_perform(ch);
     if (res != CURLE_OK) return FALSE;
     return TRUE;
 }     
 
 /*------------------------------------------+
-|       settings for the next POST          |
+|              Generic POST                 |
 +------------------------------------------*/
-static int SETOPT(char *post, char *Url)
+static int POST(char *post, char *Url)
 {
     char URL[128];
 
@@ -117,7 +116,8 @@ static int SETOPT(char *post, char *Url)
     
     res = curl_easy_perform(ch);
     if (res != CURLE_OK)  return FALSE;
-    
+    curl_slist_free_all(headers);
+    curl_easy_setopt(ch, CURLOPT_HTTPHEADER, NULL);    
     return TRUE;
 }
 
@@ -147,9 +147,7 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
 {
   size_t realsize = size * nmemb;
   MemoryStruct *mem = ( MemoryStruct *)userp;
-
   if ((mem->size+realsize) >= BuffSize) return realsize; // ! too much data !
-
   memcpy(&(mem->memory[mem->size]), contents, realsize);
   mem->size += realsize;
   mem->memory[mem->size] = 0;
@@ -228,7 +226,7 @@ int login(char *user, char *password)
                     "<mode>1</mode>\n"
                     "</request>", user, bin2hex(firstNonce, SHA256_DIGEST_LENGTH));
 
-    if (!SETOPT(post, "/api/user/challenge_login")) return FALSE;
+    if (!POST(post, "/api/user/challenge_login")) return FALSE;
 
     i=strstr(Buff,"<salt>"); f=strstr(Buff,"</salt>");
     if (!i || !f) return FALSE;
@@ -254,9 +252,9 @@ int login(char *user, char *password)
                     "<finalnonce>%s</finalnonce>\n"
                     "</request>\n",bin2hex(clientproof, SHA256_DIGEST_LENGTH), servernonce);
 
-    if (!SETOPT(post, "/api/user/authentication_login"))    return FALSE; // reset TokInfo
-    if (!GET("/api/user/state-login"))                      return FALSE;
-    if (!strstr(Buff, "<State>0</State>"))                  return FALSE;
+    if (!POST(post, "/api/user/authentication_login"))    return FALSE; // reset TokInfo
+    if (!GET("/api/user/state-login"))                    return FALSE;
+    if (!strstr(Buff, "<State>0</State>"))                return FALSE;
     return TRUE;
 }
 
@@ -304,7 +302,7 @@ static char * reboot ()
                 "<Control>1</Control>\n"  
                 "</request>\n";
 
-    if (!SETOPT(post, "/api/device/control")) return FALSE;
+    if (!POST(post, "/api/device/control")) return FALSE;
 
     curl_easy_cleanup(ch);
     curl_global_cleanup();
@@ -330,7 +328,7 @@ static char * SmsList (int InOut)
             "<UnreadPreferred>0</UnreadPreferred>\n"
             "</request>\n",InOut);
 
-    if (!SETOPT(post, "/api/sms/sms-list")) return FALSE;
+    if (!POST(post, "/api/sms/sms-list")) return FALSE;
     return Buff;
 }
 
@@ -355,7 +353,7 @@ static char * DeleteSms (int index)
                     "<Index>%d</Index>\n"
                     "</request>\n", index);
 
-    if (!SETOPT(post, "/api/sms/delete-sms"))     return FALSE;
+    if (!POST(post, "/api/sms/delete-sms"))     return FALSE;
     if (!strstr(Buff, "<response>OK</response>")) return FALSE;
     return Buff;
 }
@@ -385,7 +383,7 @@ static char * SendSms (char *to, char *testo)
             "</request>\n", to, testo, strlen(testo),
             O.tm_year+1900, O.tm_mon+1, O.tm_mday, O.tm_hour, O.tm_min, O.tm_sec);
 
-    if (!SETOPT(post, "/api/sms/send-sms"))       return FALSE;
+    if (!POST(post, "/api/sms/send-sms"))       return FALSE;
     if (!strstr(Buff, "<response>OK</response>")) return FALSE;
     return Buff;
 }
@@ -400,7 +398,7 @@ static int logout ()
                     "<Logout>1</Logout>\n"
                     "</request>\n";
 
-    if (!SETOPT(post, "/api/user/logout")) return FALSE;
+    if (!POST(post, "/api/user/logout")) return FALSE;
     curl_easy_cleanup(ch);
     curl_global_cleanup();
     ch=NULL;
