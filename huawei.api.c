@@ -299,7 +299,7 @@ static char * reboot ()
 {
     char *post= "<?xml version='1.0' encoding='UTF-8'?>\n"
                 "<request>\n"
-                "<Control>1</Control>\n"  
+                "<Control>1</Control>\n"  // 1=Reboot  |  2=Reset
                 "</request>\n";
 
     if (!POST(post, "/api/device/control")) return FALSE;
