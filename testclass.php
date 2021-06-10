@@ -17,6 +17,13 @@ if ($HU->login("UserID", "Password")==FALSE) { echo $HU->LastError. "!\n"; die()
 if ($ret=$HU->Status())             echo $ret."\n"; else { echo $HU->LastError. "!\n"; die(); }
 //if ($HU->SendSms("1234567890", "SMS sent via php class")==FALSE) { echo $HU->LastError. "!\n"; die(); }
 
+// switch to 4G only
+if ($HU->setNetMode(huawei::NETMODE_4G)) {echo "Mode 4G set\n"; } else { echo $HU->LastError. "!\n"; die(); }
+if ($ret=$HU->getNetMode())    echo $ret->NetworkMode."\n"; else { echo $HU->LastError. "!\n"; die(); }
+// switch to Auto
+if ($HU->setNetMode(huawei::NETMODE_AUTO)) {echo "Mode Auto set\n"; } else { echo $HU->LastError. "!\n"; die(); }
+if ($ret=$HU->getNetMode())    echo $ret->NetworkMode."\n"; else { echo $HU->LastError. "!\n"; die(); }
+
 if ($HU->logout() == FALSE) { echo $HU->LastError. "!\n"; die(); }
 
 echo "\n\nall OK !\n";
