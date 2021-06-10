@@ -383,5 +383,35 @@ class huawei
         curl_close( $this->ch ); $this->ch=NULL;
         return TRUE;
     }
+   
+       /**
+     * '00' for Auto
+     * '03' for 4G only
+     */
+    const NETMODE_AUTO = '00';
+    const NETMODE_4G   = '03';
+    public function setNetMode ($mode = NETMODE_AUTO) {
+        $nm = $this->getNetMode();
+        $post = "<?xml version='1.0' encoding='UTF-8'?>".
+                "<request>".
+                "<NetworkMode>$mode</NetworkMode>".
+                "<NetworkBand>".$nm->NetworkBand."</NetworkBand>".
+                "<LTEBand>".$nm->LTEBand."</LTEBand>".
+                "</request>";
+        if (!($body = $this->POST($post, "/api/net/net-mode"))) return $this->ERROR(__METHOD__);
+        if (!strpos($body, "<response>OK</response>")) return $this->ERROR(__METHOD__ .":NAK");
+        return TRUE;
+    }
+
+
+    /********************************************
+    *    GET /api/net/net-mode     *
+    ********************************************/
+    public function getNetMode ()
+    {
+        if (!($body = $this->GET("/api/net/net-mode"))) return $this->ERROR(__METHOD__);
+        $nm = simplexml_load_string($body);
+        return $nm;
+    }
 }
-?>
+
